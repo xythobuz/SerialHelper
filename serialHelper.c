@@ -9,7 +9,7 @@
 /*
  * Define DEBUG if you want to get debug output:
  */
-// #define DEBUG
+#define DEBUG
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,7 +23,7 @@
 #include <unistd.h>
 #endif
 
-#define VERSION "0.42 Gamma"
+#define VERSION "0.5"
 
 #ifdef PlatformWindows
 #define PLATFORM "Windows"
@@ -40,9 +40,10 @@ char debugText[] = "--> Debug:\t";
 #endif
 
 int keepRunning = 1;
-struct termios oldTerm;
 
 #ifndef PlatformWindows
+struct termios oldTerm;
+
 int setRawMode(int fd) {
 	struct termios newTerm;
 	fcntl(fd, F_SETFL, FNDELAY);
@@ -206,7 +207,7 @@ int main(int argc, char* argv[]) {
 		if (strcmp(argv[1], "-s") == 0) {
 			if (argc > 2)
 				searchTerm = argv[2];
-			if (searchTerm == NULL)
+			if (searchTerm == NULL) {
 #ifndef PlatformWindows
 				// Detect Mac OS X and use "tty." as search term
 				// Else use DEFAULTSEARCH
@@ -236,9 +237,12 @@ printf("%sGot OS Name \"%s\"\n", debugText, osName);
 				} else {
 					ports = getSerialPorts(DEFAULTSEARCH);
 				}
+#else
+				ports = getSerialPorts(NULL);
 #endif
-			else
+			} else {
 				ports = getSerialPorts(searchTerm);
+			}
 			while (1) {
 				if (ports[c] != NULL) {
 					c++;
@@ -263,8 +267,8 @@ printf("%sGot OS Name \"%s\"\n", debugText, osName);
 				return 1;
 			}
 			signal(SIGINT, intHandler);
-			signal(SIGQUIT, intHandler);
 #ifndef PlatformWindows
+			signal(SIGQUIT, intHandler);
 			setRawMode(STDIN_FILENO);
 #endif
 			printf("Connection established!\nClose with CTRL + C\n");
