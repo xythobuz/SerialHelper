@@ -11,6 +11,13 @@
  */
 #define DEBUG
 
+/*
+ * Define DETECTMAC if you want the unix version to run 'uname' at runtime
+ * and select a proper default search term for the serial port detection.
+ * If you don't want to spend this time, undefine this...
+ */
+#define DETECTMAC
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -119,6 +126,7 @@ int main(int argc, char* argv[]) {
 	char *searchTerm = NULL;
 	char **ports;
 #ifndef PlatformWindows
+#ifdef DETECTMAC
 	char *tempFileName = (char *)malloc((L_tmpnam + 1) * sizeof(char));
 	char *commandLine = (char *)malloc((12 + L_tmpnam) * sizeof(char));
 	char *osName = (char *)malloc(256 * sizeof(char));
@@ -127,6 +135,7 @@ int main(int argc, char* argv[]) {
 	strcpy(commandLine, "uname -s > ");
 	tmpnam(tempFileName);
 	strcat(commandLine, tempFileName);
+#endif
 #endif
 
 	if (argc >= 2) {
@@ -209,8 +218,9 @@ int main(int argc, char* argv[]) {
 				searchTerm = argv[2];
 			if (searchTerm == NULL) {
 #ifndef PlatformWindows
+#ifdef DETECTMAC
 				// Detect Mac OS X and use "tty." as search term
-				// Else use DEFAULTSEARCH
+				// Else use DEFAULTSEARCH ("tty")
 				if (system(commandLine) == 0) {
 #ifdef DEBUG
 printf("%sRan \"%s\" successfully\n", debugText, commandLine);
@@ -238,6 +248,11 @@ printf("%sGot OS Name \"%s\"\n", debugText, osName);
 					ports = getSerialPorts(DEFAULTSEARCH);
 				}
 #else
+				// Don't detect macs, use Defaultsearch
+				ports = getSerialPorts(DEFAULTSEARCH);
+#endif
+#else
+				// Don't need search term for win
 				ports = getSerialPorts(NULL);
 #endif
 			} else {
